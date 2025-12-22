@@ -124,6 +124,8 @@ class PaymentController extends Controller
                     if ($order) {
                         $order->status = 'paid';
                         $order->save();
+
+                        
                         
                         // 🔥 CHUYỂN HƯỚNG VỀ TRANG CHỦ (Frontend)
                         // Kèm theo biến vnpay_status=success để Frontend biết đường mà chúc mừng

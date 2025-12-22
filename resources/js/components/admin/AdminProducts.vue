@@ -3,32 +3,26 @@ import { ref, onMounted, reactive } from 'vue'
 import axios from 'axios'
 import AdminSidebar from './AdminSidebar.vue'
 
-const products = ref([])
+
 const categories = ref([]) // 1. Thêm biến lưu danh sách danh mục
 const isEditing = ref(false)
 const showModal = ref(false)
 
+const props = defineProps(['products', 'currentPage', 'lastPage', 'isloading'])
+const emit = defineEmits(['changePage', 'addToCart', 'search',]) 
 // Form data (Thêm category_id)
 const form = reactive({
     id: null,
     name: '',
     price: '',
     description: '',
+    stock: '',
     category_id: '', // 2. Bắt buộc phải có
     image: null,      
     image_url: ''    
 })
 
-// Lấy danh sách sản phẩm
-const fetchProducts = async () => {
-    try {
-        const res = await axios.get('/api/products')
-        // Tùy cấu trúc paginate hay list thường mà bạn chỉnh dòng này nhé
-        products.value = res.data.data.data || res.data.data 
-    } catch (e) {
-        console.error('Lỗi tải SP:', e)
-    }
-}
+
 
 // 3. Lấy danh sách danh mục (Để đổ vào Dropdown)
 const fetchCategories = async () => {
@@ -64,6 +58,7 @@ const openModal = (product = null) => {
         form.name = product.name
         form.price = product.price
         form.description = product.description
+        form.stock = product.stock || 0
         form.category_id = product.category_id // Load danh mục cũ
         
         // Backend lưu 'upload/abc.jpg', Frontend cần thêm '/storage/'
@@ -76,6 +71,7 @@ const openModal = (product = null) => {
         form.name = ''
         form.price = ''
         form.description = ''
+        form.stock = ''
         form.category_id = '' // Reset danh mục
         form.image_url = ''
         form.image = null
@@ -87,6 +83,7 @@ const saveProduct = async () => {
     formData.append('name', form.name)
     formData.append('price', form.price)
     formData.append('description', form.description || '')
+    formData.append('stock', form.stock || 0)
     formData.append('category_id', form.category_id) // 4. Gửi category_id lên
 
     if (form.image) {
@@ -103,7 +100,7 @@ const saveProduct = async () => {
             alert('✅ Thêm mới thành công!')
         }
         showModal.value = false
-        fetchProducts()
+        emit('changePage', props.currentPage) // Tải lại trang hiện tại
     } catch (e) {
         console.error(e)
         // Hiển thị lỗi chi tiết từ Backend trả về (nếu có)
@@ -120,7 +117,8 @@ const deleteProduct = async (id) => {
     if (!confirm('Xóa thật không?')) return
     try {
         await axios.delete(`/api/products/${id}`)
-        fetchProducts()
+        alert('✅ Đã xóa sản phẩm!')
+        emit('changePage', props.currentPage) // Tải lại trang hiện tại
     } catch (e) {
         alert('Lỗi xóa')
     }
@@ -140,14 +138,14 @@ const getCategoryName = (id) => {
 }
 
 onMounted(() => {
-    fetchProducts()
+   
     fetchCategories() // Gọi hàm lấy danh mục
 })
 </script>
 
 
 <template>
-  <div class="container-fluid mt-4">
+  <div class="container-flui mt-4">
       <div class="row">
           
           <div class="col-md-3 col-lg-2 px-0">
@@ -162,7 +160,18 @@ onMounted(() => {
                       <button class="btn btn-light text-primary fw-bold" @click="openModal(null)">+ Thêm Mới</button>
                   </div>
 
-                  <div class="card-body p-0">
+                  <div class="card-body p-0 position-relative" style="min-height: 400px;">
+                        <div v-if="props.isloading" class="loading-overlay">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <div class="mt-2 fw-bold text-primary">Đang tải dữ liệu...</div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                            </table>
+                        </div>
                       <div class="table-responsive">
                           <table class="table table-hover align-middle mb-0">
                               <thead class="bg-light">
@@ -175,7 +184,7 @@ onMounted(() => {
                                   </tr>
                               </thead>
                               <tbody>
-                                  <tr v-for="p in products" :key="p.id">
+                                  <tr v-for="p in props.products" :key="p.id">
                                       <td>
                                           <img :src="getImageUrl(p.image)" class="rounded border" width="50" height="50" style="object-fit: cover;">
                                       </td>
@@ -195,10 +204,16 @@ onMounted(() => {
                               </tbody>
                           </table>
                       </div>
+                      
                   </div>
               </div>
               </div>
       </div>
+       <div class="d-flex justify-content-center mt-4" v-if="lastPage > 1">
+        <button class="btn btn-outline-secondary me-2" :disabled="currentPage === 1" @click="$emit('changePage', currentPage - 1)">« Trước</button>
+        <span class="align-self-center fw-bold">Trang {{ currentPage }} / {{ lastPage }}</span>
+        <button class="btn btn-outline-secondary ms-2" :disabled="currentPage === lastPage" @click="$emit('changePage', currentPage + 1)">Sau »</button>
+        </div>
 
       <div v-if="showModal" class="modal-backdrop fade show"></div>
       <div v-if="showModal" class="modal fade show d-block" tabindex="-1">
@@ -224,7 +239,10 @@ onMounted(() => {
                               <label class="form-label">Tên sản phẩm</label>
                               <input v-model="form.name" type="text" class="form-control" required>
                           </div>
-                          
+                          <div class="mb-3">
+                                <label class="form-label fw-bold">Số lượng tồn kho</label>
+                                <input v-model="form.stock" type="number" class="form-control" placeholder="Nhập số lượng, ví dụ: 100" min="0" >
+                            </div>
                           <div class="mb-3">
                               <label class="form-label">Giá</label>
                               <input v-model="form.price" type="number" class="form-control" required>
@@ -257,4 +275,17 @@ onMounted(() => {
 
 <style scoped>
 .modal-backdrop { opacity: 0.5; background-color: #000; }
+/* Lớp phủ mờ che bảng */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
 </style>

@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 // --- 1. STATE QUẢN LÝ ---
 const router = useRouter()
+const route = useRoute()
 // const currentView = ref('products') // ❌ Đã bỏ biến này
 const user = ref(null) 
 const token = ref(localStorage.getItem('auth_token')) 
@@ -69,31 +70,40 @@ const products = ref([]); const cartItems = ref([]);
 const currentPage = ref(1); const lastPage = ref(1);
 
 const currentFilters = ref({}) 
+const isloading=ref(false)
 
-const fetchProducts = async (page = 1, filters = {}) => {
-  console.log("2. App.vue đang gọi API với filters:", filters);
+// Thêm tham số shouldPush vào cuối
+const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
+  isloading.value = true;
   try {
-    // Cập nhật bộ lọc mới nếu có
-    if (Object.keys(filters).length > 0) {
-        currentFilters.value = filters
+    // Chỉ push router nếu không phải lần đầu load trang (F5)
+    if (shouldPush && parseInt(route.query.page) !== page) {
+      router.push({ 
+        query: { ...route.query, page: page.toString() } 
+      }).catch(() => {})
     }
 
-    // 👇 KHỚP PARAM VỚI BACKEND
+    if (Object.keys(filters).length > 0) {
+      currentFilters.value = filters
+    }
+
     const params = {
-        page: page,
-        keyword: currentFilters.value.keyword || '',   // Backend cần 'keyword'
-        price_min: currentFilters.value.min_price || '', // Backend cần 'price_min'
-        price_max: currentFilters.value.max_price || '', // Backend cần 'price_max'
-        // category_id: ... (nếu sau này làm lọc danh mục thì thêm vào đây)
+      page: page,
+      keyword: currentFilters.value.keyword || '',
+      price_min: currentFilters.value.min_price || '',
+      price_max: currentFilters.value.max_price || '',
     }
 
     const res = await axios.get('/api/products', { params })
     
-    // Gán dữ liệu (Cấu trúc này chuẩn theo JSON bạn gửi rồi)
     products.value = res.data.data.data
     currentPage.value = res.data.data.current_page
     lastPage.value = res.data.data.last_page
-  } catch (e) { console.error(e) }
+  } catch (e) { 
+    console.error(e) 
+  } finally {
+    isloading.value = false
+  }
 }
 
 const fetchCart = async () => {
@@ -149,7 +159,7 @@ const handleCheckout = () => {
 // --- 4. LOGIC ĐẶT HÀNG ---
 const submitOrder = async (orderInfo) => {
   if(!confirm("Xác nhận đặt hàng?")) return;
-
+  isloading.value=true
   try {
     const payload = {
       shipping_address: orderInfo.address, 
@@ -201,6 +211,8 @@ const submitOrder = async (orderInfo) => {
     } else {
         alert('❌ Lỗi đặt hàng: ' + (err.response?.data?.message || err.message));
     }
+  } finally{
+    isloading.value=false
   }
 }
 // Hàm lấy thông tin user từ Token (để F5 không bị mất)
@@ -217,7 +229,7 @@ const fetchUser = async () => {
 }
 
 // --- 5. KHỞI TẠO ---
-onMounted(() => {
+onMounted(async() => {
   
   // Check VNPAY redirect
   const urlParams = new URLSearchParams(window.location.search);
@@ -235,11 +247,15 @@ onMounted(() => {
       window.history.replaceState({}, document.title, "/");
   }
 
-  fetchProducts(); 
+  // fetchProducts(); 
   if (token.value) { 
-    fetchUser();
+    await fetchUser();
     fetchCart(); }
-
+    // 1. Lấy số trang từ URL (ví dụ: localhost:8000/admin/product?page=5)
+    const pageFromUrl = parseInt(route.query.page) || 1
+    
+    // 2. Gọi API với đúng số trang đó
+    fetchProducts(pageFromUrl,{},false)
   
 })
 </script>
@@ -260,13 +276,12 @@ onMounted(() => {
                🛒 Giỏ hàng
                <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ cartItems.length }}</span>
              </button>
-                    <router-link 
+              <router-link 
                 v-if="user && user.role === 'admin'" 
-                to="/admin/orders" 
-                class="btn btn-danger fw-bold"
-            >
+                to="/admin/dashboard" 
+                class="btn btn-danger fw-bold">
                 👑 Trang Quản Lý
-            </router-link>
+             </router-link>
              <button class="btn btn-danger" @click="handleLogout">Đăng xuất</button>
           </template>
           
@@ -283,6 +298,7 @@ onMounted(() => {
         :user="user"
         :currentPage="currentPage"
         :lastPage="lastPage"
+        :isloading="isloading"
         @changePage="fetchProducts"
         @addToCart="addToCart"
         @removeFromCart="removeFromCart"

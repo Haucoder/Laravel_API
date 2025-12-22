@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps(['cartItems', 'totalAmount', 'user'])
+const props = defineProps(['cartItems', 'totalAmount', 'user','isloading'])
 const emit = defineEmits(['submit-order', 'cancel'])
 
 // Dữ liệu form (Tự điền sẵn nếu đã login)
@@ -19,9 +19,16 @@ const submitOrder = () => {
 </script>
 
 <template>
-  <div class="row">
+  <div class="row position-relative">
+    <div v-if="props.isloading" class="loading-overlay">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <div class="mt-2 fw-bold text-primary">Đang tải dữ liệu...</div>
+                            </div>
+            </div>
     <div class="col-md-7">
-      <div class="card shadow-sm p-4 mb-4">
+      <div class="card shadow-sm p-4 mb-4  ">
+         
         <h4 class="mb-3 text-primary">🚚 Thông tin giao hàng</h4>
         <form @submit.prevent="submitOrder">
           <div class="mb-3">
@@ -77,3 +84,17 @@ const submitOrder = () => {
     </div>
   </div>
 </template>
+<style scoped>
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+  </style>

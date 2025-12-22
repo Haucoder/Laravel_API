@@ -56,7 +56,14 @@ class OrderController extends Controller
             // Bước 2.3: Tạo Chi tiết đơn hàng (Order Items)
             foreach ($request->items as $item) {
                 $product = Product::find($item['product_id']);
-                
+                if($product){
+                   if($product->stock){
+                     $product->decrement('stock',$item['quantity']);
+                   }    else{
+                        return response()->json(['message' => "Sản phẩm {$product->name} không đủ hàng!"], 400);
+                   }
+                }
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],

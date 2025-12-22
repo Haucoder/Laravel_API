@@ -1,6 +1,17 @@
 <script setup>
 defineProps(['cartItems', 'totalAmount'])
 defineEmits(['removeFromCart', 'updateQuantity', 'checkout']) // Thêm sự kiện checkout
+const getImageUrl = (path) => {
+    if (!path) return 'https://placehold.co/50'; // Ảnh mặc định nếu không có dữ liệu
+
+    // Kiểm tra xem path có phải là một URL đầy đủ (bắt đầu bằng http hoặc https) không
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path; // Trả về link gốc luôn, KHÔNG thêm /storage/
+    }
+
+    // Nếu là ảnh upload cục bộ (ví dụ: uploads/abc.jpg) thì mới thêm /storage/
+    return `/storage/${path}`;
+}
 </script>
 
 <template>
@@ -18,7 +29,7 @@ defineEmits(['removeFromCart', 'updateQuantity', 'checkout']) // Thêm sự ki�
           <tbody>
             <tr v-for="item in cartItems" :key="item.id">
               <td class="text-center">
-                 <img :src="item.product?.image ? '/storage/' + item.product.image : 'https://via.placeholder.com/50'" width="50">
+                  <img :src="getImageUrl(item.product?.image)" width="50" class="rounded border">
               </td>
               <td>{{ item.product?.name }}</td>
               <td class="text-end">{{ Number(item.product?.price).toLocaleString() }} đ</td>
@@ -27,7 +38,16 @@ defineEmits(['removeFromCart', 'updateQuantity', 'checkout']) // Thêm sự ki�
                 <div class="d-flex justify-content-center gap-2">
                   <button @click="$emit('updateQuantity', item, -1)" class="btn btn-sm btn-outline-secondary" :disabled="item.quantity <= 1">➖</button>
                   <span class="fw-bold">{{ item.quantity }}</span>
-                  <button @click="$emit('updateQuantity', item, 1)" class="btn btn-sm btn-outline-secondary">➕</button>
+                  <button 
+                        @click="$emit('updateQuantity', item, 1)" 
+                        class="btn btn-sm btn-outline-secondary"
+                        :disabled="item.quantity >= item.product.stock"
+                      >
+                        ➕
+                      </button>
+                      <div v-if="item.quantity >= item.product.stock" class="text-danger small">
+                        Đã đạt giới hạn kho
+                  </div>
                 </div>
               </td>
               
