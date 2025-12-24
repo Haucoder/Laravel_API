@@ -76,6 +76,7 @@ class OrderController extends Controller
             DB::commit();
 
             Mail::to($request->user()->email)->send(new OrderPlaced($order));
+            $request->user()->cartItems()->delete();
 
             return response()->json([
                 'status' => true,
@@ -149,10 +150,15 @@ public function cancel(Request $request, $id)
 
     // 3. Kiểm tra điều kiện: Chỉ được hủy khi đang 'pending'
     if ($order->status !== 'pending') {
+        
         return response()->json([
             'status' => false,
             'message' => 'Đơn hàng này đang được giao hoặc đã hoàn thành, không thể hủy!'
         ], 400);
+    }
+    foreach($order->orderItems as $item){
+        Product::where('id',$item->product_id)->increment('stock',$item->quantity);
+       
     }
 
     // 4. Nếu ok hết thì đổi trạng thái
@@ -161,7 +167,7 @@ public function cancel(Request $request, $id)
 
     return response()->json([
         'status' => true,
-        'message' => 'Đã hủy đơn hàng thành công!',
+        'message' => 'Đã hủy đơn hàng thành công và trả lại kho!',
         'data' => $order
     ]);
 }

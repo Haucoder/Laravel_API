@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps(['products', 'currentPage', 'lastPage'])
+const props = defineProps(['products', 'currentPage', 'lastPage', 'cartItems', 'product', 'isloading'])
 const emit = defineEmits(['changePage', 'addToCart', 'search']) 
 
 // Khai báo biến (Tên biến đặt sao cũng được, quan trọng là lúc emit)
@@ -9,6 +9,18 @@ const keyword = ref('')
 const minPrice = ref('')
 const maxPrice = ref('')
 
+
+const isLimitReached = (p) => {
+  if (!props.cartItems || !p) return false;
+  
+  // Tìm xem sản phẩm 'p' này có trong giỏ hàng chưa
+  const cartItem = props.cartItems.find(item => 
+    (item.product_id === p.id) || (item.product?.id === p.id)
+  );
+    return p.stock <=0;
+  // So sánh số lượng trong giỏ với số lượng tồn kho của chính nó
+  //return cartItem ? cartItem.quantity >= p.stock : false;
+}
 // Xử lý khi bấm nút Lọc
 const handleSearch = () => {
     console.log("1. Đã bấm nút Lọc, dữ liệu là:", { 
@@ -67,9 +79,26 @@ const resetSearch = () => {
                 <h6 class="card-title text-truncate">{{ product.name }}</h6>
                 <p class="card-text text-danger fw-bold fs-5">{{ Number(product.price).toLocaleString() }} đ</p>
                 
-                <button class="btn btn-outline-primary w-100 mt-auto" @click="$emit('addToCart', product)">
-                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                <button 
+                    class="btn w-100" 
+                    :class="product.stock > 0 && !isLimitReached(product) ? 'btn-outline-primary' : 'btn-outline-secondary'"
+                    :disabled="product.stock <= 0 || isLimitReached(product)"
+                    @click="$emit('addToCart', product)"
+                >
+                    <i class="bi" :class="product.stock > 0 && !isLimitReached(product) ? 'bi-cart-plus' : 'bi-dash-circle'"></i>
+                    
+                    <span v-if="product.stock <= 0">Hết hàng</span>
+                    <span v-else-if="isLimitReached(product )">Đã đạt giới hạn kho</span>
+                    <span v-else>Thêm vào giỏ</span>
                 </button>
+                <div class="text-center mt-1" style="min-height: 20px;">
+                    <small v-if="isLimitReached(product)" class="text-danger fw-bold">
+                    Kho chỉ còn {{ product.stock }} sản phẩm
+                    </small>
+                    <small v-else-if="product.stock > 0" class="text-muted">
+                    Tồn kho: {{ product.stock }}
+                    </small>
+                </div>
             </div>
         </div>
       </div>

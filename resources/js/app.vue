@@ -122,9 +122,18 @@ const addToCart = async (product) => {
     router.push('/login');
     return;
   }
+  if(products.stock <=0){
+    alert('sản phẩm đã hết hàng');
+    return;
+  }
   try {
     await axios.post('/api/cart', { product_id: product.id, quantity: 1 });
-    alert('✅ Đã thêm vào giỏ!'); fetchCart();
+    alert('✅ Đã thêm vào giỏ!');
+    const productInList = products.value.find(p => p.id === product.id);
+        if (productInList && productInList.stock > 0) {
+            productInList.stock -= 1; 
+        }
+     fetchCart();
   } catch (e) { alert('Lỗi: ' + e.message) }
 }
 
