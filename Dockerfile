@@ -31,4 +31,4 @@ RUN composer install --no-dev --optimize-autoloader
 EXPOSE 10000
 
 # Chạy lệnh khởi động Web
-CMD php artisan serve --host=0.0.0.0 --port=10000
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
