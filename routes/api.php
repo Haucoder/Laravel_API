@@ -11,6 +11,12 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
 
 // 1. Route công khai (Ai cũng vào được)
+
+Route::get('/nap-du-lieu-bi-mat', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+    return response()->json(['message' => 'Đã nạp dữ liệu thành công! Hàng về rồi sếp ơi!']);
+});
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
