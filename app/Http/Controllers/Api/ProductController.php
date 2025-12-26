@@ -91,6 +91,8 @@ class ProductController extends Controller
                 'message'=>"khong tim thay"
             ],404);
         }
+        $product->increment('views');
+
         $product->load('category','comments.user');
 
         $wishlist=false;
@@ -108,6 +110,16 @@ class ProductController extends Controller
             'is_wishlist'=>$wishlist
         ],200);
     }
+    public function getTrendingProducts() {
+    $products = Product::orderBy('views', 'desc') // Sắp xếp giảm dần theo view
+                ->take(8) // Chỉ lấy 8 sản phẩm
+                ->get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $products
+    ]);
+}
 
     public function update($id, Request $request) {
     $product = Product::find($id);

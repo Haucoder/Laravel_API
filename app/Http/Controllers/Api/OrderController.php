@@ -222,4 +222,18 @@ public function cancel(Request $request, $id)
 
         return response()->json(['message' => 'Đã dọn dẹp ' . $expiredOrders->count() . ' đơn hàng quá hạn.']);
     }
+    public function show($id){
+        $order=Order::with('orderItems.product')->findOrFail($id);
+        if(!$order){
+            return response()->json([
+                'status'=>false,
+                'message'=>'khong tim thay don hang'
+            ],404);
+        }
+        return response()->json([
+            'status'=>true,
+            'message'=>'chi tiet don hang',
+            'data'=>$order
+        ]);
+    }
 }

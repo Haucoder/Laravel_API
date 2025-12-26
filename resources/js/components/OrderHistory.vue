@@ -77,14 +77,31 @@ onMounted(() => {
                     <span>{{ Number(item.price * item.quantity).toLocaleString() }} đ</span>
                 </li>
             </ul>
-
+            
+            
             <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                <h5 class="text-danger mb-0">Tổng tiền: {{ Number(order.total_price).toLocaleString() }} đ</h5>
-                
-                <button v-if="order.status === 'pending'" @click="cancelOrder(order.id)" class="btn btn-outline-danger btn-sm">
-                    Hủy đơn hàng
-                </button>
-            </div>
+    
+              <h5 class="text-danger mb-0">
+                  {{ Number(order.total_price).toLocaleString() }} đ
+              </h5>
+              
+              <div class="d-flex gap-2"> <router-link 
+                      :to="{ name: 'UserOrderDetail', params: { id: order.id } }" 
+                      class="btn btn-primary btn-sm"
+                  >
+                      <i class="bi bi-eye"></i> Chi tiết
+                  </router-link>
+
+                  <button 
+                      v-if="order.status === 'pending'" 
+                      @click="cancelOrder(order.id)" 
+                      class="btn btn-outline-danger btn-sm"
+                  >
+                      Hủy đơn
+                  </button>
+              </div>
+
+          </div>
         </div>
       </div>
     </div>

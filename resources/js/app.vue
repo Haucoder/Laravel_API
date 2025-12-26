@@ -279,8 +279,8 @@ onMounted(async() => {
        <div class="d-flex align-items-center gap-3">
           <h1 class="h3 m-0 text-primary cursor-pointer" @click="router.push('/')">🛍️ Shop Của Hậu</h1>
           <span v-if="user" class="text-muted">| Hi, {{ user.name }}</span>
-          <router-link to="/wishlist" class="btn btn-light text-danger position-relative me-2" title="Yêu thích">
-                  <i class="bi bi-heart"></i>
+          <router-link to="/wishlist" class="btn  text-danger position-relative me-2" title="Yêu thích">
+                  <i class="bi bi-heart-fill"></i>
               </router-link>
        </div>
 

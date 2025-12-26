@@ -13,6 +13,7 @@ import AdminCategory from './components/admin/AdminCategory.vue'
 import AdminDashboard from './components/admin/AdminDashBoard.vue'
 import ProductDetail from './components/ProductDetail.vue'
 import Wishlist from './components/Wishlist.vue'
+import OrderDetail from './components/OrderDetail.vue'
 
 const routes = [
     { path: '/', component: ProductList, name: 'products' },
@@ -31,6 +32,21 @@ const routes = [
     component: ProductDetail,
     },
     { path: '/wishlist', component: Wishlist, name: 'wishlist' },
+    // user and admin can view order detail
+        {
+        path: '/admin/orders/:id',
+        name: 'AdminOrderDetail',
+        component: OrderDetail,
+        meta: { role: 'admin' } // <--- Đánh dấu: Đây là Admin
+    },
+
+    // --- ĐƯỜNG DẪN CHO USER (KHÁCH) ---
+    {
+        path: '/my-orders/:id',
+        name: 'UserOrderDetail',
+        component: OrderDetail,
+        meta: { role: 'user' } // <--- Đánh dấu: Đây là User
+    }
 
 ]
 

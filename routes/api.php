@@ -21,7 +21,7 @@ Route::get('/products/{id}', [ProductController::class, 'show']);
 
 //Route::get('/categories',[CategoryController::class,'index']);
  Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn']);
-
+Route::get('/orders/{id}', [OrderController::class, 'show']);
 // 2. Route BẢO MẬT (Phải có Token mới vào được)
 // Ta gom nhóm lại và dùng middleware 'auth:sanctum'
 Route::middleware('auth:sanctum')->group(function () {
@@ -46,7 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //comment
     Route::post('/comments', [ProductController::class, 'StoreComment']);
 
-   
+   //view 
+   Route::get('products/trending', [ProductController::class, 'getTrendingProducts']);
 
 
     Route::post('/checkout',[CartController::class,"checkOut"]);

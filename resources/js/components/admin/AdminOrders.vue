@@ -92,42 +92,57 @@ onMounted(() => {
                                   </tr>
                               </thead>
                               <tbody>
-                                  <tr v-for="order in orders" :key="order.id">
-                                      <td>
-                                          <strong>#{{ order.id }}</strong><br>
-                                          <small class="text-muted">{{ new Date(order.created_at).toLocaleString() }}</small>
-                                      </td>
+                                    <tr v-for="order in orders" :key="order.id">
+                                        <td>
+                                            <router-link 
+                                                :to="{ name: 'AdminOrderDetail', params: { id: order.id } }"
+                                                class="text-decoration-none fw-bold text-primary"
+                                            >
+                                                #{{ order.id }}
+                                            </router-link>
+                                            <br>
+                                            <small class="text-muted">{{ new Date(order.created_at).toLocaleString() }}</small>
+                                        </td>
 
-                                      <td>
-                                          <div class="fw-bold text-primary">{{ order.user ? order.user.name : 'Khách vãng lai' }}</div>
-                                          <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ order.shipping_address }}</small><br>
-                                          <small class="text-muted"><i class="bi bi-telephone"></i> {{ order.phone }}</small>
-                                      </td>
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ order.user ? order.user.name : 'Khách vãng lai' }}</div>
+                                            <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ order.shipping_address }}</small><br>
+                                            <small class="text-muted"><i class="bi bi-telephone"></i> {{ order.phone }}</small>
+                                        </td>
 
-                                      <td class="fw-bold text-danger">{{ Number(order.total_price || 0).toLocaleString() }} đ</td>
+                                        <td class="fw-bold text-danger">{{ Number(order.total_price || 0).toLocaleString() }} đ</td>
 
-                                      <td>
-                                          <span class="badge" :class="getStatusBadge(order.status)">
-                                              {{ (order.status || "unknown").toUpperCase() }}
-                                          </span>
-                                      </td>
+                                        <td>
+                                            <span class="badge" :class="getStatusBadge(order.status)">
+                                                {{ (order.status || "unknown").toUpperCase() }}
+                                            </span>
+                                        </td>
 
-                                      <td>
-                                          <select 
-                                              class="form-select form-select-sm" 
-                                              style="width: 140px"
-                                              :value="order.status"
-                                              @change="updateStatus(order, $event.target.value)"
-                                              :disabled="order.status === 'canceled' || order.status === 'completed'"
-                                          >
-                                              <option value="pending">⏳ Chờ xử lý</option>
-                                              <option value="shipping">🚚 Đang giao</option>
-                                              <option value="completed">✅ Hoàn thành</option>
-                                              <option value="canceled">❌ Hủy đơn</option>
-                                          </select>
-                                      </td>
-                                  </tr>
-                              </tbody>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <router-link 
+                                                    :to="{ name: 'AdminOrderDetail', params: { id: order.id } }" 
+                                                    class="btn btn-sm btn-outline-info"
+                                                    title="Xem chi tiết"
+                                                >
+                                                    <i class="bi bi-eye"></i> </router-link>
+
+                                                <select 
+                                                    class="form-select form-select-sm" 
+                                                    style="width: 130px"
+                                                    :value="order.status"
+                                                    @change="updateStatus(order, $event.target.value)"
+                                                    :disabled="order.status === 'canceled' || order.status === 'completed'"
+                                                >
+                                                    <option value="pending">⏳ Chờ xử lý</option>
+                                                    <option value="shipping">🚚 Đang giao</option>
+                                                    <option value="completed">✅ Hoàn thành</option>
+                                                    <option value="canceled">❌ Hủy đơn</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
                           </table>
                       </div>
                   </div>

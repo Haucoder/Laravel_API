@@ -99,11 +99,14 @@ onMounted(() => {
                 </div>
                 
                 <h3 class="text-danger fw-bold my-3">{{ Number(product.price).toLocaleString() }} đ</h3>
+                <div class="text-muted mb-3">
+                    <i class="bi bi-eye"></i> {{ product.views }} lượt xem
+                </div>
                 <p class="text-muted">{{ product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.' }}</p>
                 <p>Tồn kho: <strong>{{ product.stock }}</strong></p>
 
                 <div class="d-flex gap-3 mt-4">
-                    <button class="btn btn-primary btn-lg flex-grow-1" @click="addToCart" :disabled="product.stock <= 0">
+                    <button class="btn btn-primary btn-lg " @click="addToCart" :disabled="product.stock <= 0">
                         <i class="bi bi-cart-plus"></i> Thêm vào giỏ
                     </button>
 
