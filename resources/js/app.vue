@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted,reactive } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import { useToast } from "vue-toastification";
@@ -76,32 +76,109 @@ const currentFilters = ref({})
 const isloading=ref(false)
 
 // Thêm tham số shouldPush vào cuối
+// const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
+//   isloading.value = true;
+//   try {
+//     // Chỉ push router nếu không phải lần đầu load trang (F5)
+//     if (shouldPush && parseInt(route.query.page) !== page) {
+//       router.push({ 
+//         query: { ...route.query, page: page.toString() } 
+//       }).catch(() => {})
+//     }
+
+//     if (Object.keys(filters).length > 0) {
+//       currentFilters.value = filters
+//     }
+
+//     const params = {
+//       page: page,
+//       keyword: currentFilters.value.keyword || '',
+//       price_min: currentFilters.value.min_price || '',
+//       price_max: currentFilters.value.max_price || '',
+//     }
+
+//     const res = await axios.get('/api/products', { params })
+    
+//     products.value = res.data.data.data
+//     currentPage.value = res.data.data.current_page
+//     lastPage.value = res.data.data.last_page
+//   } catch (e) { 
+//     console.error(e) 
+//   } finally {
+//     isloading.value = false
+//   }
+// }
+const productCache = ref({}); 
+
 const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
-  isloading.value = true;
-  try {
-    // Chỉ push router nếu không phải lần đầu load trang (F5)
-    if (shouldPush && parseInt(route.query.page) !== page) {
+  // Logic cập nhật Router cũ của ông (Giữ nguyên)
+  if (shouldPush && parseInt(route.query.page) !== page) {
       router.push({ 
         query: { ...route.query, page: page.toString() } 
       }).catch(() => {})
-    }
+  }
 
-    if (Object.keys(filters).length > 0) {
+  if (Object.keys(filters).length > 0) {
       currentFilters.value = filters
-    }
+  }
 
-    const params = {
+  // 2. TẠO PARAMS CHUẨN
+  const params = {
       page: page,
       keyword: currentFilters.value.keyword || '',
       price_min: currentFilters.value.min_price || '',
       price_max: currentFilters.value.max_price || '',
-    }
+  }
 
+  // 3. TẠO "CHÌA KHÓA" CACHE (Quan trọng)
+  // Biến object params thành chuỗi để làm ID duy nhất. 
+  // Ví dụ: '{"page":1,"keyword":"iphone"}'
+  const cacheKey = JSON.stringify(params);
+
+  // 4. KIỂM TRA KHO HÀNG (CACHE)
+  if (productCache.value[cacheKey]) {
+      // ✅ CÓ HÀNG: Lấy ra xài luôn, KHÔNG gọi API
+      const cachedData = productCache.value[cacheKey];
+      
+      products.value = cachedData.data;
+      currentPage.value = cachedData.current_page;
+      lastPage.value = cachedData.last_page;
+
+      // UX: Cuộn lên đầu trang ngay lập tức tạo cảm giác nhanh
+      window.scrollTo({ top: 0, behavior: 'auto' }); 
+      
+      // 🚀 Tải ngầm trang sau (Prefetch)
+      prefetchNextPage(page, currentFilters.value);
+      
+      return; // Dừng hàm tại đây
+  }
+
+  // 5. NẾU KHÔNG CÓ TRONG KHO -> MỚI GỌI API
+  isloading.value = true;
+  try {
     const res = await axios.get('/api/products', { params })
     
-    products.value = res.data.data.data
-    currentPage.value = res.data.data.current_page
-    lastPage.value = res.data.data.last_page
+    // Dữ liệu API trả về
+    const responseData = res.data.data; // Lưu gọn
+
+    // Cập nhật biến hiển thị
+    products.value = responseData.data;
+    currentPage.value = responseData.current_page;
+    lastPage.value = responseData.last_page;
+
+    // 6. LƯU VÀO KHO ĐỂ DÙNG LẦN SAU
+    productCache.value[cacheKey] = {
+        data: responseData.data,
+        current_page: responseData.current_page,
+        last_page: responseData.last_page
+    };
+
+    // UX: Cuộn lên đầu
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 🚀 Tải ngầm trang sau
+    prefetchNextPage(page, currentFilters.value);
+
   } catch (e) { 
     console.error(e) 
   } finally {
@@ -109,6 +186,41 @@ const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
   }
 }
 
+// === HÀM TẢI NGẦM (CHẠY ÂM THẦM KHÔNG ẢNH HƯỞNG UI) ===
+const prefetchNextPage = async (currentPage, filters) => {
+    // Nếu chưa đến trang cuối thì mới tải trang kế
+    if (currentPage < lastPage.value) {
+        const nextPage = currentPage + 1;
+        
+        // Tạo params cho trang sau
+        const nextParams = {
+            page: nextPage,
+            keyword: filters.keyword || '',
+            price_min: filters.min_price || '',
+            price_max: filters.max_price || '',
+        };
+
+        const nextCacheKey = JSON.stringify(nextParams);
+
+        // Nếu trong kho chưa có trang sau thì mới tải
+        if (!productCache.value[nextCacheKey]) {
+            try {
+                // Gọi API nhưng KHÔNG bật biến isloading
+                const res = await axios.get('/api/products', { params: nextParams });
+                
+                // Lưu luôn vào kho
+                productCache.value[nextCacheKey] = {
+                    data: res.data.data.data,
+                    current_page: res.data.data.current_page,
+                    last_page: res.data.data.last_page
+                };
+                console.log(`[Prefetch] Đã tải ngầm trang ${nextPage}`);
+            } catch (e) {
+                // Lỗi tải ngầm thì kệ nó, không cần báo user
+            }
+        }
+    }
+}
 const fetchCart = async () => {
   if (!token.value) return; 
   try {
