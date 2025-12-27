@@ -17,6 +17,19 @@ Route::get('/nap-du-lieu-bi-mat', function () {
     \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
     return response()->json(['message' => 'Đã nạp dữ liệu thành công! Hàng về rồi sếp ơi!']);
 });
+
+Route::get('/tang-toc-website', function () {
+    // 1. Cache các file cấu hình (Config)
+    \Illuminate\Support\Facades\Artisan::call('config:cache');
+    
+    // 2. Cache các đường dẫn (Routes) - Giúp tìm route nhanh hơn
+    \Illuminate\Support\Facades\Artisan::call('route:cache');
+    
+    // 3. Cache file giao diện (View)
+    \Illuminate\Support\Facades\Artisan::call('view:cache');
+
+    return response()->json(['message' => 'Đã bật chế độ Turbo! Web chạy nhanh hơn rồi nhé! 🚀']);
+});
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
