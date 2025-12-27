@@ -90,9 +90,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <h1 style="background: red; color: white; padding: 20px; z-index: 99999;">
-     ĐÂY LÀ FILE TÔI ĐANG SỬA 123
-  </h1>
+
   <div class="container">
     <h3 class="mb-4 text-primary">📦 Lịch sử đơn hàng của tôi</h3>
 
