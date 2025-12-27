@@ -141,21 +141,84 @@ const addToCart = async (product) => {
   } catch (e) {toast.error("Không thể thêm hàng: " + e.message); }
 }
 
+// const updateQuantity = async (item, change) => {
+//   const oldQty = item.quantity;
+//   const newQty = item.quantity + change;
+//   if(newQty < 1) return;
+//   try {
+//     await axios.put('/api/cart/' + item.id, { quantity: newQty });
+//     fetchCart();
+//   } catch (e) { alert('Lỗi update') }
+// }
 const updateQuantity = async (item, change) => {
-  const newQty = item.quantity + change;
-  if(newQty < 1) return;
+  // 1. Lưu lại giá trị cũ (Để lỡ lỗi thì quay xe)
+  const oldQty = item.quantity;
+  const newQty = oldQty + change;
+
+  // 2. Validate (Kiểm tra điều kiện)
+  // Không cho nhỏ hơn 1
+  if (newQty < 1) return;
+  
+  // Kiểm tra tồn kho (Nếu biến item có chứa thông tin product)
+  if (item.product && item.product.stock && newQty > item.product.stock) {
+      alert('Đã vượt quá số lượng tồn kho!');
+      return;
+  }
+
+  // 3. QUAN TRỌNG NHẤT: Cập nhật giao diện NGAY LẬP TỨC
+  // Người dùng sẽ thấy số nhảy ngay, cảm giác cực mượt
+  item.quantity = newQty; 
+
+  // 4. Gửi API ngầm bên dưới
   try {
     await axios.put('/api/cart/' + item.id, { quantity: newQty });
-    fetchCart();
-  } catch (e) { alert('Lỗi update') }
+    
+    // ⚠️ LƯU Ý: Mình ĐÃ BỎ dòng fetchCart() ở đây.
+    // Vì giao diện đã đúng rồi, gọi lại fetchCart làm gì cho lag thêm!
+    
+  } catch (e) {
+    // 5. Nếu lỗi thật thì mới trả lại số cũ (Rollback)
+    item.quantity = oldQty; 
+    console.error(e);
+    alert('Lỗi cập nhật, vui lòng thử lại');
+  }
 }
 
+// const removeFromCart = async (id) => {
+//   if(!confirm("Xóa nhé?")) return;
+//   try { await axios.delete('/api/cart/' + id); fetchCart(); } 
+//   catch (e) { alert('Lỗi xóa') }
+// }
 const removeFromCart = async (id) => {
-  if(!confirm("Xóa nhé?")) return;
-  try { await axios.delete('/api/cart/' + id); fetchCart(); } 
-  catch (e) { alert('Lỗi xóa') }
-}
+  // 1. Hỏi cho chắc ăn
+  if (!confirm("Bạn muốn xóa sản phẩm này?")) return;
 
+  // 2. LƯU LẠI "MẠNG SỐNG" (Backup dữ liệu cũ)
+  // Phải dùng [... ] để copy ra mảng mới, chứ không nó dính ref
+  const backupCart = [...cartItems.value];
+
+  // 3. XÓA NGAY LẬP TỨC TRÊN GIAO DIỆN
+  // Lọc bỏ item có id trùng khớp. Vue sẽ tự cập nhật màn hình ngay tức khắc.
+  cartItems.value = cartItems.value.filter(item => item.id !== id);
+
+  // 4. Giờ mới âm thầm gọi API xóa
+  try {
+    await axios.delete('/api/cart/' + id);
+    
+    // ✅ THÀNH CÔNG: Không làm gì cả! 
+    // Không gọi fetchCart() nữa vì giao diện đã đúng rồi.
+
+  } catch (e) {
+    // ❌ CÓ LỖI: Hoàn tác (Rollback)
+    // Trả lại danh sách cũ cho người dùng
+    cartItems.value = backupCart;
+    
+    alert('Lỗi hệ thống, không xóa được!');
+
+    // Xử lý 401 (Hết phiên đăng nhập) giống hàm fetchCart của bạn
+    if (e.response && e.response.status === 401) handleLogout();
+  }
+}
 const totalAmount = computed(() => {
   return cartItems.value.reduce((sum, item) => {
     const price = item.product ? Number(item.product.price) : 0;

@@ -5,34 +5,75 @@ import axios from 'axios'
 const orders = ref([])
 const loading = ref(true)
 
+// const fetchOrders = async () => {
+//   try {
+//     // Gọi API lấy lịch sử đơn hàng
+//     const res = await axios.get('/api/orders')
+//     // API của bạn trả về data phân trang, nên lấy res.data.data.data
+//     orders.value = res.data.data.data 
+//   } catch (err) {
+//     alert('Lỗi tải đơn hàng')
+//   } finally {
+//     loading.value = false
+//   }
+// }
 const fetchOrders = async () => {
-  try {
-    // Gọi API lấy lịch sử đơn hàng
-    const res = await axios.get('/api/orders')
-    // API của bạn trả về data phân trang, nên lấy res.data.data.data
-    orders.value = res.data.data.data 
-  } catch (err) {
-    alert('Lỗi tải đơn hàng')
-  } finally {
-    loading.value = false
-  }
+    loading.value = true; // <--- Thêm dòng này để bật xoay xoay
+    try {
+        const res = await axios.get('/api/orders');
+        // Data lồng nhau hơi sâu do Laravel Pagination + Resource, viết vầy là đúng rồi
+        orders.value = res.data.data.data || res.data.data || []; 
+    } catch (err) {
+        console.error(err); // Nên log lỗi ra console để dev xem
+        // alert('Lỗi tải đơn hàng'); // Có thể bỏ alert nếu không muốn làm phiền user
+    } finally {
+        loading.value = false; // Tắt xoay xoay dù thành công hay thất bại
+    }
 }
 
 // Hàm format ngày tháng cho đẹp
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString('vi-VN')
-}
+// const formatDate = (dateString) => {
+//   return new Date(dateString).toLocaleString('vi-VN')
+// }
 
-// Hàm hủy đơn (chỉ hủy khi pending)
+// // Hàm hủy đơn (chỉ hủy khi pending)
+// const cancelOrder = async (id) => {
+//     if(!confirm('Chắc chắn hủy đơn này?')) return;
+//     try {
+//         await axios.put(`/api/orders/${id}/cancel`);
+//         alert('Đã hủy đơn hàng!');
+//         fetchOrders(); // Tải lại danh sách
+//     } catch (err) {
+//         alert(err.response?.data?.message || 'Lỗi hủy đơn');
+//     }
+// }
+
 const cancelOrder = async (id) => {
     if(!confirm('Chắc chắn hủy đơn này?')) return;
+    
+    // 1. Lưu trạng thái cũ để backup
+    const targetOrder = orders.value.find(o => o.id === id);
+    if (!targetOrder) return;
+    const oldStatus = targetOrder.status;
+
+    // 2. CẬP NHẬT GIAO DIỆN NGAY (User thấy sướng ngay lập tức)
+    // Đổi trạng thái sang "cancelled" (hoặc -1 tùy backend bạn quy định)
+    targetOrder.status = 'cancelled'; 
+
+    // 3. Gọi API ngầm
     try {
         await axios.put(`/api/orders/${id}/cancel`);
-        alert('Đã hủy đơn hàng!');
-        fetchOrders(); // Tải lại danh sách
+        alert('Đã hủy đơn hàng thành công!');
+        // KHÔNG CẦN gọi fetchOrders() nữa -> Đỡ lag
     } catch (err) {
-        alert(err.response?.data?.message || 'Lỗi hủy đơn');
+        // 4. Nếu lỗi thì trả lại trạng thái cũ
+        targetOrder.status = oldStatus;
+        alert(err.response?.data?.message || 'Lỗi hủy đơn, vui lòng thử lại');
     }
+}
+const formatDate = (dateString) => {
+    if (!dateString) return ''; // Thêm cái này lỡ date null đỡ lỗi
+    return new Date(dateString).toLocaleString('vi-VN');
 }
 
 onMounted(() => {
