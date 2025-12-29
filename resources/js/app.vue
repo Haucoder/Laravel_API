@@ -450,58 +450,102 @@ onMounted(async() => {
 
 <template>
   <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white shadow-sm rounded">
-       <div class="d-flex align-items-center gap-3">
-          <h1 class="h3 m-0 text-primary cursor-pointer" @click="router.push('/')">🛍️ Shop Của Hậu</h1>
-          <span v-if="user" class="text-muted">| Hi, {{ user.name }}</span>
-          <router-link to="/wishlist" class="btn  text-danger position-relative me-2" title="Yêu thích">
-                  <i class="bi bi-heart-fill"></i>
-              </router-link>
-       </div>
+        <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white shadow-sm rounded">
+          <div class="d-flex align-items-center gap-3">
+                <img src="logo/logo.png" alt="loading" @click="router.push('/')" style="cursor: pointer;">
+                <h1 class="h3 m-0 text-primary " @click="router.push('/')" style="cursor: pointer;"> Shop Của Hậu</h1>
+            
+                  <router-link to="/products" class="btn  text-primary position-relative me-2" title="Yêu thích">
+                      Shop
+                  </router-link>
+                  <router-link to="/wishlist" class="btn text-primary position-relative me-2" title="Yêu thích">
+                      Wishlist
+                  </router-link>
+                  <router-link to="#" class="btn  text-primary position-relative me-2" title="Yêu thích">
+                      Contact
+                  </router-link>
+          </div>
 
-       <div class="d-flex gap-2">
-          <template v-if="token">
-             <button class="btn btn-outline-secondary" @click="router.push('/orders')">📦 Đơn mua</button>
-             
-             <button class="btn btn-outline-primary position-relative" @click="router.push('/cart')">
-               🛒 Giỏ hàng
-               <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ cartItems.length }}</span>
-             </button>
-             
-              <router-link 
-                v-if="user && user.role === 'admin'" 
-                to="/admin/dashboard" 
-                class="btn btn-danger fw-bold">
-                 Trang Quản Lý
-             </router-link>
-             <button class="btn btn-danger" @click="handleLogout">Đăng xuất</button>
-          </template>
           
-          <template v-else>
-             <button class="btn btn-primary" @click="router.push('/login')">Đăng nhập</button>
-          </template>
-       </div>
+            <div class="d-flex align-items-center gap-3">
+        
+              <template v-if="!token">
+                <button class="btn btn-primary" @click="router.push('/login')">Đăng nhập</button>
+              </template>
+
+              <template v-else>
+                
+                <button class="btn btn-outline-primary position-relative border-0 me-2" @click="router.push('/cart')">
+                  <i class="bi bi-cart-fill"></i> <span v-if="cartItems.length > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ cartItems.length }}
+                  </span>
+                </button>
+
+                <div class="dropdown">
+                  <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img v-if="user && user.avatar" :src="user.avatar" alt="Avatar" width="32" height="32" class="rounded-circle me-2 border">
+                    <i v-else class="bi bi-person-circle fs-4 me-2"></i> 
+                    
+                    <span class="d-none d-sm-inline fw-bold">{{ user ? user.name : 'user' }}</span>
+                  </a>
+
+                  <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                    
+                    <template v-if="user && user.role === 'admin'">
+                      <li>
+                        <router-link to="/admin/dashboard" class="dropdown-item text-danger fw-bold">
+                          <i class="bi bi-speedometer2 me-2"></i> Trang Quản Trị
+                        </router-link>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                    </template>
+
+                    <template v-else>
+                      <li>
+                        <router-link to="/profile" class="dropdown-item">
+                          <i class="bi bi-person-gear me-2"></i> Thông tin cá nhân
+                        </router-link>
+                      </li>
+                      <li>
+                        <router-link to="/orders" class="dropdown-item">
+                          <i class="bi bi-box-seam me-2"></i> Lịch sử đơn hàng
+                        </router-link>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                    </template>
+
+                    <li>
+                      <button class="dropdown-item" @click="handleLogout">
+                        <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                      </button>
+                    </li>
+
+                  </ul>
+                </div>
+
+              </template>
+            </div>
+        </div>
+    
+        <router-view 
+            :products="products"
+            :cartItems="cartItems"
+            :totalAmount="totalAmount"
+            :user="user"
+            :currentPage="currentPage"
+            :lastPage="lastPage"
+            :isloading="isloading"
+            @changePage="fetchProducts"
+            @addToCart="addToCart"
+            @removeFromCart="removeFromCart"
+            @updateQuantity="updateQuantity"
+            @checkout="handleCheckout"
+            @submit-order="submitOrder"
+            @login-success="handleLogin"
+            @cancel="router.push('/cart')"
+            @register-submit="handleRegister"
+            @search="fetchProducts(1, $event)"
+        ></router-view>
+    
     </div>
-    
-    <router-view 
-        :products="products"
-        :cartItems="cartItems"
-        :totalAmount="totalAmount"
-        :user="user"
-        :currentPage="currentPage"
-        :lastPage="lastPage"
-        :isloading="isloading"
-        @changePage="fetchProducts"
-        @addToCart="addToCart"
-        @removeFromCart="removeFromCart"
-        @updateQuantity="updateQuantity"
-        @checkout="handleCheckout"
-        @submit-order="submitOrder"
-        @login-success="handleLogin"
-        @cancel="router.push('/cart')"
-        @register-submit="handleRegister"
-        @search="fetchProducts(1, $event)"
-    ></router-view>
-    
-  </div>
 </template>

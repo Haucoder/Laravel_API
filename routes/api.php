@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
-
+use App\Http\Controllers\Api\ProfileuserController;
 // 1. Route công khai (Ai cũng vào được)
 
 Route::get('/nap-du-lieu-bi-mat', function () {
@@ -32,12 +32,13 @@ Route::get('/tang-toc-website', function () {
 });
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/products/featured', [ProductController::class, 'getFeatured']);
 
 Route::get('/products', [ProductController::class, 'index']); // Xem danh sách thì cho xem thoải mái
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 
-
+    
 //Route::get('/categories',[CategoryController::class,'index']);
  Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn']);
 Route::get('/orders/{id}', [OrderController::class, 'show']);
@@ -47,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Đăng xuất
     Route::post('/logout', [AuthController::class, 'logout']);
+
+
     //mua hang
     Route::post('/orders',[OrderController::class,'store']);
     //lich su don hang
@@ -78,7 +81,15 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/user', function (Request $request) {
         return $request->user();
+        
     });
+    // API lấy thông tin & cập nhật Profile
+    Route::get('/profile', [ProfileuserController::class, 'show']);
+    Route::put('/profile', [ProfileuserController::class, 'update']);
+    Route::post('/profile/change-password', [ProfileuserController::class, 'changePassword']);
+
+    // API lấy lịch sử đơn hàng
+    
     
     
 });

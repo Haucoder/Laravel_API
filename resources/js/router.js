@@ -14,9 +14,12 @@ import AdminDashboard from './components/admin/AdminDashBoard.vue'
 import ProductDetail from './components/ProductDetail.vue'
 import Wishlist from './components/Wishlist.vue'
 import OrderDetail from './components/OrderDetail.vue'
+import UserProfile from './components/user/UserProfile.vue'
+import Home from './components/Home.vue'
 
 const routes = [
-    { path: '/', component: ProductList, name: 'products' },
+    { path: '/products', component: ProductList, name: 'products' },
+    { path: '/', component: Home, name: 'home' },
     { path: '/cart', component: ShoppingCart, name: 'cart' },
     { path: '/login', component: Login, name: 'login' },
     { path: '/checkout', component: Checkout, name: 'checkout' },   
@@ -46,7 +49,14 @@ const routes = [
         name: 'UserOrderDetail',
         component: OrderDetail,
         meta: { role: 'user' } // <--- Đánh dấu: Đây là User
+    },
+     {
+        path: '/profile',
+        name: 'UserProfile',
+        component: UserProfile
     }
+        
+   
 
 ]
 

@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+
+   
  public function index(Request $request)
 {
     // Load category để hiển thị tên danh mục
@@ -119,6 +121,15 @@ class ProductController extends Controller
         'status' => true,
         'data' => $products
     ]);
+}
+ public function getFeatured() {
+    // Lấy 4 sản phẩm mới nhất dựa theo ngày tạo
+    $products = Product::orderBy('created_at', 'desc')->take(4)->get();
+    
+    // Hoặc cách 2: Lấy ngẫu nhiên
+    // $products = Product::inRandomOrder()->take(4)->get();
+
+    return response()->json($products);
 }
 
     public function update($id, Request $request) {
