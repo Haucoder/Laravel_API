@@ -1,13 +1,14 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps(['products', 'currentPage', 'lastPage', 'cartItems', 'product', 'isloading'])
+const props = defineProps(['products', 'categories','currentPage', 'lastPage', 'cartItems', 'product', 'isloading'])
 const emit = defineEmits(['changePage', 'addToCart', 'search']) 
 
 // Khai báo biến (Tên biến đặt sao cũng được, quan trọng là lúc emit)
 const keyword = ref('') 
 const minPrice = ref('')
 const maxPrice = ref('')
+const category_id=ref('')
 
 
 const isLimitReached = (p) => {
@@ -25,12 +26,14 @@ const isLimitReached = (p) => {
 const handleSearch = () => {
     console.log("1. Đã bấm nút Lọc, dữ liệu là:", { 
         keyword: keyword.value, 
+        category_id: category_id.value,
         min_price: minPrice.value, 
         max_price: maxPrice.value 
     });
 
     emit('search', {
         keyword: keyword.value,
+        category_id: category_id.value,
         min_price: minPrice.value,
         max_price: maxPrice.value
     })
@@ -41,6 +44,7 @@ const resetSearch = () => {
     keyword.value = ''
     minPrice.value = ''
     maxPrice.value = ''
+    category_id.value=''
     handleSearch() 
 }
 </script>
@@ -50,22 +54,38 @@ const resetSearch = () => {
     <div class="card mb-4 shadow-sm bg-light border-0">
         <div class="card-body">
             <div class="row g-2">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input v-model="keyword" type="text" class="form-control" placeholder="🔍 Tìm tên sản phẩm..." @keyup.enter="handleSearch">
                 </div>
-                <div class="col-md-2">
+              
+                <div class="col-md-2 ">
                     <input v-model="minPrice" type="number" class="form-control" placeholder="Giá từ...">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2 ">
                     <input v-model="maxPrice" type="number" class="form-control" placeholder="Giá đến...">
+                    
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button class="btn btn-primary w-100 fw-bold" @click="handleSearch">Lọc</button>
-                    <button class="btn btn-outline-danger" @click="resetSearch">Reset</button>
+                <div class="col-md-2 ">
+                    <select v-model="category_id" class="form-select" @change="handleSearch">
+                        <option value="">📂 Tất cả danh mục</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                            {{ cat.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-grid gap-2 ">
+                    <button class="btn btn-primary w-10 fw-bold " @click="handleSearch">Lọc</button>
+                   
+                 </div>
+                 <div class="col-md-1 d-grid gap-2 ">
+                     <button class="btn btn-outline-danger w-10 " @click="resetSearch">Reset</button>
                 </div>
             </div>
+
+            
         </div>
     </div>
+    
 
     <div v-if="products.length > 0" class="row">
       <div class="col-md-3 mb-4" v-for="product in products" :key="product.id">

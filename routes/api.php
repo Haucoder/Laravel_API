@@ -38,7 +38,7 @@ Route::get('/products', [ProductController::class, 'index']); // Xem danh sách 
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 
-    
+Route::apiResource('categories',CategoryController::class);
 //Route::get('/categories',[CategoryController::class,'index']);
  Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn']);
 Route::get('/orders/{id}', [OrderController::class, 'show']);
@@ -101,7 +101,7 @@ Route::middleware(['auth:sanctum','admin'])->group( function(){
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
     //category
-    Route::apiResource('categories',CategoryController::class);
+   // Route::apiResource('categories',CategoryController::class);
     //DashboardController
     
 

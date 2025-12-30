@@ -71,6 +71,7 @@ const handleLogout = async () => {
 // --- 3. LOGIC SẢN PHẨM & GIỎ HÀNG ---
 const products = ref([]); const cartItems = ref([]); 
 const currentPage = ref(1); const lastPage = ref(1);
+const categories = ref([]);
 
 const currentFilters = ref({}) 
 const isloading=ref(false)
@@ -110,6 +111,16 @@ const isloading=ref(false)
 // }
 const productCache = ref({}); 
 
+
+const fetchCateogries = async () => {
+  try {
+    const res = await axios.get('/api/categories');
+    categories.value = res.data.data;
+  } catch (e) {
+    console.error("Lỗi tải danh mục:", e);
+  }
+}
+
 const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
   // Logic cập nhật Router cũ của ông (Giữ nguyên)
   if (shouldPush && parseInt(route.query.page) !== page) {
@@ -126,6 +137,7 @@ const fetchProducts = async (page = 1, filters = {}, shouldPush = true) => {
   const params = {
       page: page,
       keyword: currentFilters.value.keyword || '',
+      category_id: currentFilters.value.category_id || '',
       price_min: currentFilters.value.min_price || '',
       price_max: currentFilters.value.max_price || '',
   }
@@ -196,6 +208,7 @@ const prefetchNextPage = async (currentPage, filters) => {
         const nextParams = {
             page: nextPage,
             keyword: filters.keyword || '',
+            category_id: filters.category_id || '',
             price_min: filters.min_price || '',
             price_max: filters.max_price || '',
         };
@@ -419,6 +432,7 @@ const fetchUser = async () => {
 // --- 5. KHỞI TẠO ---
 onMounted(async() => {
   document.title = "🛍️ Shop Của Hậu"
+   fetchCateogries();
   // Check VNPAY redirect
   const urlParams = new URLSearchParams(window.location.search);
   const vnpStatus = urlParams.get('vnpay_status');
@@ -529,6 +543,7 @@ onMounted(async() => {
     
         <router-view 
             :products="products"
+            :categories="categories"
             :cartItems="cartItems"
             :totalAmount="totalAmount"
             :user="user"
