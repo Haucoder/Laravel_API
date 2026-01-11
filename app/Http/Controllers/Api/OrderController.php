@@ -75,7 +75,13 @@ class OrderController extends Controller
             // Bước 2.4: Lưu mọi thứ vào Database
             DB::commit();
 
-            Mail::to($request->user()->email)->send(new OrderPlaced($order));
+           // Mail::to($request->user()->email)->send(new OrderPlaced($order));
+            try {
+                Mail::to($request->user()->email)->send(new OrderPlaced($order));
+            } catch (\Exception $e) {
+                // Nếu lỗi mail thì chỉ log lỗi lại thôi, KHÔNG làm chết app
+                \Log::error("Lỗi gửi mail đơn hàng " . $order->id . ": " . $e->getMessage());
+            }
             $request->user()->cartItems()->delete();
 
             return response()->json([
