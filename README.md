@@ -57,16 +57,12 @@ Dự án sử dụng **Mailtrap** để giả lập gửi email xác nhận đơ
 
 * **Thống kê Dashboard:** Tổng quan doanh thu, số lượng đơn hàng, sản phẩm, khách hàng.
 * **Quản lý Sản phẩm:**
-* Upload nhiều ảnh sản phẩm (Multi-image upload).
-* Tự động resize và tối ưu ảnh.
+* Upload  ảnh sản phẩm .
 * Quản lý tồn kho (Stock).
-
-
 * **Quản lý Đơn hàng:** Xem chi tiết đơn hàng, cập nhật trạng thái (Chờ xử lý -> Đang giao -> Hoàn thành).
-
 ---
 
-## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
+##  Công Nghệ Sử Dụng (Tech Stack)
 
 ### Backend
 
@@ -91,8 +87,7 @@ Nếu bạn muốn chạy dự án trên máy cá nhân:
 
 1. **Clone dự án:**
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
-
+...
 ```
 
 2. **Cài đặt Backend:**
@@ -112,8 +107,6 @@ php artisan serve
 
 npm install
 npm run dev
-
-
 
 
 
