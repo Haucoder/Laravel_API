@@ -87,7 +87,7 @@ Nếu bạn muốn chạy dự án trên máy cá nhân:
 
 1. **Clone dự án:**
 ```bash
-...
+git clon link http
 ```
 
 2. **Cài đặt Backend:**
@@ -107,9 +107,6 @@ php artisan serve
 
 npm install
 npm run dev
+```
 
 
-
----
-
-*Cảm ơn bạn đã ghé thăm dự án! ❤️*
