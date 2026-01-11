@@ -73,7 +73,7 @@ onMounted(() => {
               <div class="card shadow border-0">
                   <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                       <h5 class="mb-0">👑 Quản Lý Đơn Hàng</h5>
-                      <button class="btn btn-sm btn-light text-primary" @click="fetchOrders">🔄 Làm mới</button>
+                    <!--  <button class="btn btn-sm btn-light text-primary" @click="fetchOrders">🔄 Làm mới</button>-->
                       <button @click="runCleanup" class="btn btn-sm btn-warning shadow-sm">
                             <i class="bi bi-trash"></i> Dọn dẹp đơn treo (quá 30p)
                         </button>
